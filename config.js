@@ -10,8 +10,8 @@ const CONFIG = {
     // 5. Copy the Bin ID from the URL
     // 6. Go to API Keys, copy the Master Key
     
-    BIN_ID: 'YOUR_BIN_ID_HERE',
-    API_KEY: '$2a$10$YOUR_API_KEY_HERE',
+    BIN_ID: '6a3baddcda38895dfef6a061',
+    API_KEY: '$2a$10$N2MQ5tq11xAnfuAvBL87J.I3EkzmqD4Cci3wR3cg6BsfmI7/K0q9C',
     
     // ==========================================
     // GITHUB GIST SETUP (Alternative)
