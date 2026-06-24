@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Key Verification API</title>
+</head>
+<body>
+    <pre id="output"></pre>
+    <script src="config.js"></script>
+    <script>
+        // This endpoint verifies keys via URL parameters
+        // Usage: verify.html?key=XXXX-XXXX-XXXX-XXXX&hwid=hardware-id
+        
+        const params = new URLSearchParams(window.location.search);
+        const key = params.get('key');
+        const hwid = params.get('hwid');
+        const product = params.get('product') || 'default';
+
+        const API_BASE = CONFIG.USE_GIST 
+            ? `https://api.github.com/gists/${CONFIG.GIST_ID}`
+            : `https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}`;
+
+        const HEADERS = CONFIG.USE_GIST
+            ? { 'Authorization': `token ${CONFIG.GITHUB_TOKEN}`, 'Content-Type': 'application/json' }
+            : { 'X-Master-Key': CONFIG.API_KEY, 'Content-Type': 'application/json' };
+
+        async function verifyKey() {
+            if (!key) {
+                return output({ valid: false, message: 'No key provided' });
+            }
+
+            // Fetch all keys
+            const response = await fetch(API_BASE + (CONFIG.USE_GIST ? '' : '/latest'), {
+                headers: HEADERS
+            });
+            const data = await response.json();
+            const keys = CONFIG.USE_GIST 
+                ? JSON.parse(data.files['keys.json']?.content || '[]')
+                : (data.record?.keys || []);
+
+            // Find the key
+            const keyData = keys.find(k => k.key === key);
+            
+            if (!keyData) {
+                return output({ valid: false, message: 'Invalid key' });
+            }
+
+            // Check expiration
+            if (keyData.expires) {
+                const expiryDate = new Date(keyData.expires);
+                if (expiryDate < new Date()) {
+                    // Update status to expired
+                    keyData.status = 'expired';
+                    await updateKeys(keys);
+                    return output({ valid: false, message: 'Key expired', expires: keyData.expires });
+                }
+            }
+
+            // Check HWID lock
+            if (keyData.status === 'active' && keyData.hwid) {
+                if (hwid && keyData.hwid !== hwid) {
+                    return output({ valid: false, message: 'Key already in use on another device' });
+                }
+            }
+
+            // Activate key if unused
+            if (keyData.status === 'unused') {
+                keyData.status = 'active';
+                keyData.usedAt = new Date().toISOString();
+                keyData.usedBy = hwid || 'unknown';
+                keyData.hwid = hwid || null;
+                await updateKeys(keys);
+            }
+
+            return output({ 
+                valid: true, 
+                message: 'Key verified',
+                type: keyData.type,
+                expires: keyData.expires,
+                product: keyData.product,
+                activatedAt: keyData.usedAt
+            });
+        }
+
+        async function updateKeys(keys) {
+            if (CONFIG.USE_GIST) {
+                await fetch(API_BASE, {
+                    method: 'PATCH',
+                    headers: HEADERS,
+                    body: JSON.stringify({
+                        files: { 'keys.json': { content: JSON.stringify(keys, null, 2) } }
+                    })
+                });
+            } else {
+                await fetch(API_BASE, {
+                    method: 'PUT',
+                    headers: HEADERS,
+                    body: JSON.stringify({ keys: keys })
+                });
+            }
+        }
+
+        function output(data) {
+            document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+        }
+
+        verifyKey();
+    </script>
+</body>
+</html>
