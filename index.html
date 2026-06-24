@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeyGen Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #58a6ff;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #8b949e;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            color: #f0f6fc;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #c9d1d9;
+            font-weight: 500;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 8px;
+        }
+        .btn-primary {
+            background: #238636;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2ea043;
+        }
+        .btn-danger {
+            background: #da3633;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f85149;
+        }
+        .btn-warning {
+            background: #d2991d;
+            color: #0d1117;
+        }
+        .btn-warning:hover {
+            background: #e3b341;
+        }
+        .btn-copy {
+            background: #30363d;
+            color: #c9d1d9;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .btn-copy:hover {
+            background: #444c56;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #21262d;
+        }
+        th {
+            background: #161b22;
+            color: #8b949e;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+        tr:hover td {
+            background: #1c2129;
+        }
+        .key-cell {
+            font-family: 'Courier New', monospace;
+            color: #7ee787;
+            font-size: 13px;
+        }
+        .status-active {
+            color: #3fb950;
+            font-weight: 600;
+        }
+        .status-expired {
+            color: #f85149;
+            font-weight: 600;
+        }
+        .status-unused {
+            color: #d2991d;
+            font-weight: 600;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-active {
+            background: rgba(63, 185, 80, 0.2);
+            color: #3fb950;
+        }
+        .badge-expired {
+            background: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+        }
+        .badge-unused {
+            background: rgba(210, 153, 29, 0.2);
+            color: #d2991d;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-card h3 {
+            color: #8b949e;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            color: #f0f6fc;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+        }
+        .generated-keys {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 16px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #7ee787;
+            line-height: 1.8;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-success { background: #238636; }
+        .toast-error { background: #da3633; }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 KeyGen System</h1>
+        <p class="subtitle">License Key Management Panel</p>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Keys</h3>
+                <div class="value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active</h3>
+                <div class="value" id="stat-active">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Unused</h3>
+                <div class="value" id="stat-unused">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Expired</h3>
+                <div class="value" id="stat-expired">0</div>
+            </div>
+        </div>
+
+        <!-- Generate Keys -->
+        <div class="card">
+            <h2>Generate Keys</h2>
+            <div class="form-group">
+                <label>Number of Keys</label>
+                <input type="number" id="gen-count" value="1" min="1" max="100">
+            </div>
+            <div class="form-group">
+                <label>License Type</label>
+                <select id="gen-type">
+                    <option value="lifetime">Lifetime</option>
+                    <option value="30days">30 Days</option>
+                    <option value="90days">90 Days</option>
+                    <option value="365days">365 Days (1 Year)</option>
+                    <option value="custom">Custom Days</option>
+                </select>
+            </div>
+            <div class="form-group" id="custom-days-group" style="display:none;">
+                <label>Custom Days</label>
+                <input type="number" id="gen-custom-days" value="7" min="1">
+            </div>
+            <div class="form-group">
+                <label>Product/App Name (optional)</label>
+                <input type="text" id="gen-product" placeholder="MyApp">
+            </div>
+            <div class="form-group">
+                <label>Notes (optional)</label>
+                <textarea id="gen-notes" placeholder="Batch notes..." rows="2"></textarea>
+            </div>
+            <button class="btn-primary" onclick="generateKeys()">Generate Keys</button>
+        </div>
+
+        <!-- Keys Table -->
+        <div class="card">
+            <h2>All Keys</h2>
+            <div style="margin-bottom:16px;">
+                <button class="btn-warning" onclick="loadKeys()">Refresh</button>
+                <button class="btn-danger" onclick="deleteAllKeys()">Delete All</button>
+                <button class="btn-copy" onclick="exportKeys()">Export CSV</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Product</th>
+                            <th>Created</th>
+                            <th>Expires</th>
+                            <th>Used By</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keys-table-body">
+                        <tr><td colspan="8" style="text-align:center;color:#8b949e;">Loading keys...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for generated keys -->
+    <div class="modal" id="keys-modal">
+        <div class="modal-content">
+            <h2>✅ Keys Generated!</h2>
+            <p style="color:#8b949e;margin:8px 0;">Copy these keys now. They won't be shown again.</p>
+            <div class="generated-keys" id="generated-keys-list"></div>
+            <button class="btn-primary" onclick="copyGeneratedKeys()">Copy All</button>
+            <button class="btn-warning" onclick="downloadGeneratedKeys()">Download .txt</button>
+            <button class="btn-danger" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+</body>
+</html>
+
+<script src="config.js"></script>
+<script>
+    // ===== CONFIGURATION =====
+    // Set these in config.js or directly here
+    const CONFIG = {
+        // JSONbin.io - Free tier (10,000 requests)
+        // Sign up at jsonbin.io, create a bin, get your API key
+        BIN_ID: 'YOUR_JSONBIN_BIN_ID',
+        API_KEY: '$2a$10$YOUR_JSONBIN_API_KEY',
+        // Alternative: Use GitHub Gist
+        // GIST_ID: 'YOUR_GIST_ID',
+        // GITHUB_TOKEN: 'ghp_YOUR_GITHUB_TOKEN',
+        USE_GIST: false, // Set to true to use GitHub Gist instead
+        ADMIN_PASSWORD: 'admin123', // Change this!
+        KEY_PREFIX: '', // Optional prefix like 'MYAPP-'
+    };
+
+    const API_BASE = CONFIG.USE_GIST 
+        ? `https://api.github.com/gists/${CONFIG.GIST_ID}`
+        : `https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}`;
+
+    const HEADERS = CONFIG.USE_GIST
+        ? { 'Authorization': `token ${CONFIG.GITHUB_TOKEN}`, 'Content-Type': 'application/json' }
+        : { 'X-Master-Key': CONFIG.API_KEY, 'Content-Type': 'application/json' };
+
+    let allKeys = [];
+    let lastGeneratedKeys = [];
+
+    // ===== KEY GENERATION =====
+    function generateKeySegment(length = 4) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+
+    function generateKey() {
+        const prefix = CONFIG.KEY_PREFIX;
+        return prefix + [
+            generateKeySegment(4),
+            generateKeySegment(4),
+            generateKeySegment(4),
+            generateKeySegment(4)
+        ].join('-');
+    }
+
+    function calculateExpiry(type, customDays = 0) {
+        const now = new Date();
+        switch(type) {
+            case 'lifetime': return null;
+            case '30days': return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+            case '90days': return new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString();
+            case '365days': return new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
+            case 'custom': return new Date(now.getTime() + customDays * 24 * 60 * 60 * 1000).toISOString();
+            default: return null;
+        }
+    }
+
+    // ===== JSONBIN / GIST OPERATIONS =====
+    async function fetchKeys() {
+        const response = await fetch(API_BASE + (CONFIG.USE_GIST ? '' : '/latest'), {
+            headers: HEADERS
+        });
+        const data = await response.json();
+        
+        if (CONFIG.USE_GIST) {
+            const content = data.files['keys.json']?.content || '[]';
+            return JSON.parse(content);
+        } else {
+            return data.record?.keys || [];
+        }
+    }
+
+    async function saveKeys(keys) {
+        if (CONFIG.USE_GIST) {
+            const response = await fetch(API_BASE, {
+                method: 'PATCH',
+                headers: HEADERS,
+                body: JSON.stringify({
+                    files: {
+                        'keys.json': { content: JSON.stringify(keys, null, 2) }
+                    }
+                })
+            });
+            return response.json();
+        } else {
+            const response = await fetch(API_BASE, {
+                method: 'PUT',
+                headers: HEADERS,
+                body: JSON.stringify({ keys: keys })
+            });
+            return response.json();
+        }
+    }
+
+    // ===== CRUD OPERATIONS =====
+    async function generateKeys() {
+        const count = parseInt(document.getElementById('gen-count').value) || 1;
+        const type = document.getElementById('gen-type').value;
+        const product = document.getElementById('gen-product').value || 'default';
+        const notes = document.getElementById('gen-notes').value || '';
+        let customDays = 0;
+
+        if (type === 'custom') {
+            customDays = parseInt(document.getElementById('gen-custom-days').value) || 7;
+        }
+
+        lastGeneratedKeys = [];
+        const newKeys = [];
+
+        for (let i = 0; i < count; i++) {
+            const key = generateKey();
+            const keyObj = {
+                key: key,
+                type: type,
+                product: product,
+                status: 'unused',
+                created: new Date().toISOString(),
+                expires: calculateExpiry(type, customDays),
+                usedBy: null,
+                usedAt: null,
+                notes: notes,
+                hwid: null
+            };
+            newKeys.push(keyObj);
+            lastGeneratedKeys.push(key);
+        }
+
+        allKeys = await fetchKeys();
+        allKeys = [...allKeys, ...newKeys];
+        await saveKeys(allKeys);
+        
+        showGeneratedKeysModal();
+        loadKeys();
+        showToast(`Generated ${count} key(s) successfully!`, 'success');
+    }
+
+    async function loadKeys() {
+        try {
+            allKeys = await fetchKeys();
+            updateStats();
+            renderKeysTable();
+        } catch (error) {
+            showToast('Failed to load keys. Check your API configuration.', 'error');
+            console.error(error);
+        }
+    }
+
+    async function deleteKey(keyToDelete) {
+        if (!confirm(`Delete key: ${keyToDelete}? This cannot be undone.`)) return;
+        
+        allKeys = allKeys.filter(k => k.key !== keyToDelete);
+        await saveKeys(allKeys);
+        loadKeys();
+        showToast('Key deleted.', 'success');
+    }
+
+    async function deleteAllKeys() {
+        if (!confirm('Delete ALL keys? This cannot be undone!')) return;
+        if (!confirm('Are you REALLY sure?')) return;
+        
+        allKeys = [];
+        await saveKeys(allKeys);
+        loadKeys();
+        showToast('All keys deleted.', 'success');
+    }
+
+    async function resetKey(keyToReset) {
+        allKeys = allKeys.map(k => {
+            if (k.key === keyToReset) {
+                return { ...k, status: 'unused', usedBy: null, usedAt: null, hwid: null };
+            }
+            return k;
+        });
+        await saveKeys(allKeys);
+        loadKeys();
+        showToast('Key reset to unused.', 'success');
+    }
+
+    // ===== UI FUNCTIONS =====
+    function updateStats() {
+        const now = new Date();
+        let total = allKeys.length;
+        let active = 0;
+        let unused = 0;
+        let expired = 0;
+
+        allKeys.forEach(k => {
+            if (k.status === 'active') {
+                if (k.expires && new Date(k.expires) < now) {
+                    expired++;
+                } else {
+                    active++;
+                }
+            } else if (k.status === 'unused') {
+                unused++;
+            } else if (k.status === 'expired') {
+                expired++;
+            }
+        });
+
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-active').textContent = active;
+        document.getElementById('stat-unused').textContent = unused;
+        document.getElementById('stat-expired').textContent = expired;
+    }
+
+    function renderKeysTable() {
+        const tbody = document.getElementById('keys-table-body');
+        if (allKeys.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#8b949e;">No keys found. Generate some!</td></tr>';
+            return;
+        }
+
+        const now = new Date();
+        tbody.innerHTML = allKeys.map(k => {
+            let statusClass = '';
+            let statusBadge = '';
+            const isExpired = k.expires && new Date(k.expires) < now;
+            const displayStatus = (k.status === 'active' && isExpired) ? 'expired' : k.status;
+            
+            switch(displayStatus) {
+                case 'active':
+                    statusClass = 'status-active';
+                    statusBadge = '<span class="badge badge-active">ACTIVE</span>';
+                    break;
+                case 'expired':
+                    statusClass = 'status-expired';
+                    statusBadge = '<span class="badge badge-expired">EXPIRED</span>';
+                    break;
+                case 'unused':
+                    statusClass = 'status-unused';
+                    statusBadge = '<span class="badge badge-unused">UNUSED</span>';
+                    break;
+            }
+
+            const expires = k.expires 
+                ? new Date(k.expires).toLocaleDateString() 
+                : 'Never';
+            const created = new Date(k.created).toLocaleDateString();
+
+            return `
+                <tr>
+                    <td class="key-cell">${k.key}</td>
+                    <td>${k.type}</td>
+                    <td class="${statusClass}">${statusBadge}</td>
+                    <td>${k.product || '-'}</td>
+                    <td>${created}</td>
+                    <td>${expires}</td>
+                    <td>${k.usedBy || '-'}</td>
+                    <td>
+                        <button class="btn-copy" onclick="copyKey('${k.key}')">Copy</button>
+                        <button class="btn-warning" onclick="resetKey('${k.key}')">Reset</button>
+                        <button class="btn-danger" onclick="deleteKey('${k.key}')">Del</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function showGeneratedKeysModal() {
+        document.getElementById('generated-keys-list').innerHTML = 
+            lastGeneratedKeys.join('\n');
+        document.getElementById('keys-modal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('keys-modal').classList.remove('show');
+    }
+
+    function copyGeneratedKeys() {
+        const text = lastGeneratedKeys.join('\n');
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Keys copied to clipboard!', 'success');
+        });
+    }
+
+    function downloadGeneratedKeys() {
+        const text = lastGeneratedKeys.join('\n');
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `keys_${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function copyKey(key) {
+        navigator.clipboard.writeText(key).then(() => {
+            showToast('Key copied!', 'success');
+        });
+    }
+
+    function exportKeys() {
+        const csv = ['key,type,status,product,created,expires,usedBy'];
+        allKeys.forEach(k => {
+            csv.push(`${k.key},${k.type},${k.status},${k.product || ''},${k.created},${k.expires || ''},${k.usedBy || ''}`);
+        });
+        const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `keys_export_${Date.now()}.csv`;
+        a.click();
+    }
+
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Event listeners
+    document.getElementById('gen-type').addEventListener('change', function() {
+        document.getElementById('custom-days-group').style.display = 
+            this.value === 'custom' ? 'block' : 'none';
+    });
+
+    // Close modal on click outside
+    document.getElementById('keys-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    // Initial load
+    loadKeys();
+
+    // Auto-refresh every 30 seconds
+    setInterval(loadKeys, 30000);
+</script>
